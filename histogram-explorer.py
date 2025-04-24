@@ -47,9 +47,10 @@ if uploaded_file:
     
     group_field = st.selectbox(
         "Select field to group by (optional):", 
-        options=[i for i in categorical_fields if i not in select_fields]
+        options=[i for i in categorical_fields if i not in select_fields]+["None"]
     ) # 选择分组字段，single-select
-    group_field = group_field or None # 如果没有选择分组字段，则设置为None
+    if group_field == "None": # 如果选择了None，则设置为None
+        group_field = None # 设置为None
     
     bin_count = st.slider("Choose the number of bins", min_value=5, max_value=100, value=20) # 选择箱数，slider
     
@@ -93,7 +94,7 @@ if uploaded_file:
             fig, axs = plt.subplots(
                 nrows=rows,
                 ncols=cols,
-                figsize=(14, 4*rows), # 根据行数调整图表高度
+                figsize=(14, 6*rows), # 根据行数调整图表高度
             )
             
             # axs.flatten() 是把二维坐标轴对象拉平成一维列表，好用循环遍历每个子图
@@ -104,7 +105,7 @@ if uploaded_file:
                 ax = axs[i]
                 data = filtered_df[(filtered_df[group_field]==value)][select_col]
                 sns.histplot(data.dropna(), bins=bin_count, kde=True, ax=ax) 
-                ax.set_title(f"{value}",fontsize = 14)
+                ax.set_title(f"{value}",fontsize = 16)
                 
             for j in range(i+1, len(axs)):
                 axs[j].axis('off') # 隐藏多余的子图
