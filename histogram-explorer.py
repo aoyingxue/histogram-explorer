@@ -3,6 +3,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 ## Edited on 2025/4/24 by Yuki
 
@@ -10,7 +11,9 @@ import numpy as np
 st.set_page_config(
     page_title="Histogram Explorer",
     layout="centered",
+    # layout="wide", # 让页面宽度最大化
 )
+
 st.title("Histogram Explorer")
 
 ## Keep menu without default colorful bar at the top
@@ -40,8 +43,8 @@ if uploaded_file:
     categorical_fields = df.select_dtypes(include=['object']).columns.tolist() # 选择字符串型字段
     
     select_col = st.selectbox("Select fields to count:", options=numeric_fields) # 选择绘制直方图的数值型字段，single-select
-    
     select_fields = st.multiselect("Select fields to filter by:", options=categorical_fields) # multi-select
+    
     group_field = st.selectbox(
         "Select field to group by (optional):", 
         options=[i for i in categorical_fields if i not in select_fields]
@@ -81,11 +84,11 @@ if uploaded_file:
         elif group_field:
             st.markdown("#### Screen Time Distribution Group By " + group_field)
             group_values = filtered_df[group_field].drop_duplicates().sort_values(ascending=True).tolist() # 获取分组字段的选项
-            
+
             # 判断有多少行多少列（每行两个）
-            rows = (len(group_values)+1)//2
-            cols = 2 if len(group_values) % 2 == 0 else 1
-            
+            cols = 2
+            rows = (len(group_values)+1)//2 # 计算行数，确保够用
+                        
             # 绘制直方图
             fig, axs = plt.subplots(
                 nrows=rows,
@@ -101,12 +104,15 @@ if uploaded_file:
                 ax = axs[i]
                 data = filtered_df[(filtered_df[group_field]==value)][select_col]
                 sns.histplot(data.dropna(), bins=bin_count, kde=True, ax=ax) 
-                ax.set_title(f"{value}")
+                ax.set_title(f"{value}",fontsize = 14)
                 
-            st.pyplot(fig) # 显示图表 
+            for j in range(i+1, len(axs)):
+                axs[j].axis('off') # 隐藏多余的子图
+                
             plt.tight_layout(
                 pad=3.0,
                 h_pad=4.0,
                 w_pad=1.5,
             ) # 调整子图之间的间距，防止第二排的图表标题和第一排的xlabel重合
-           
+            
+            st.pyplot(fig) # 显示图表 
