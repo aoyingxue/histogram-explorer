@@ -28,6 +28,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+plt.rcParams['font.sans-serif'] = ['SimHei']
+plt.rcParams['axes.unicode_minus'] = False 
+
 # 上传文件模块
 uploaded_file = st.file_uploader("Upload a data file (CSV or xlsx)", type=["xlsx", "csv"]) 
 
