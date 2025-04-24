@@ -80,13 +80,13 @@ if uploaded_file:
             
         elif group_field==None:
             # 没有选择分组字段，即全选
-            st.markdown("#### Overall Screen Time Distribution")
+            st.markdown("#### Overall Distribution")
             fig, ax = plt.subplots(figsize=(14, 8)) # 创建图表对象
             sns.histplot(filtered_df[select_col], bins=bin_count, kde=True, ax=ax) 
             st.pyplot(fig) # 显示图表 
             
         elif group_field:
-            st.markdown("#### Screen Time Distribution Group By " + group_field)
+            st.markdown("#### Distribution Group By " + group_field)
             group_values = filtered_df[group_field].drop_duplicates().sort_values(ascending=True).tolist() # 获取分组字段的选项
 
             # 判断有多少行多少列（每行两个）
