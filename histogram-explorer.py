@@ -34,38 +34,41 @@ plt.rcParams['axes.unicode_minus'] = False
 # 是否让用户自行选择默认数据还是自己上传数据
 option = st.radio(
     "Choose data source:",
-    ['Use sample data (Teens Screen Time Mock Data)', 'Upload your own data file'],
+    ['Use sample data *(Teens Screen Time Mock Data)*', 'Upload your own data file'],
     index=0, # 默认选项
 ) # 单选框
-if option == 'Use sample data (Teens Screen Time Mock Data)':
-    uploaded_file = pd.read_excel("data/teen_screen_time_mock_dataset.xlsx")
+df = pd.DataFrame()
+if option == 'Use sample data *(Teens Screen Time Mock Data)*':
+    uploaded_file = "data/teen_screen_time_mock_dataset.xlsx"
+    # 读取数据模块
+    df = pd.read_excel(uploaded_file)
+    st.success("Loaded sample dataset.")
 else:
     uploaded_file = st.file_uploader("Upload a data file (CSV or xlsx)", type=["xlsx", "csv"]) 
-
-if uploaded_file:
-    # 读取数据模块
-    df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('.csv') else pd.read_excel(uploaded_file) # 根据文件后缀读取CSV或Excel文件
-    st.success("✅ File uploaded successfully!") # 绿色成功提示框
-    st.write("Data Preview:", df.head()) # 显示数据预览
-    
+    if uploaded_file:
+        # 读取数据模块
+        df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('.csv') else pd.read_excel(uploaded_file) # 根据文件后缀读取CSV或Excel文件
+        st.success("✅ File uploaded successfully!") # 绿色成功提示框
+        st.write("Data Preview:", df.head()) # 显示数据预览
+if df.shape[0]>0: 
     # 让用户选择画图所需的字段
     st.markdown("### Multi-Field Filter Panel")
     numeric_fields = df.select_dtypes(include=[np.number]).columns.tolist() # 选择数值型字段
     categorical_fields = df.select_dtypes(include=['object']).columns.tolist() # 选择字符串型字段
-    
+
     select_col = st.selectbox("Select fields to count:", options=numeric_fields) # 选择绘制直方图的数值型字段，single-select
     select_fields = st.multiselect("Select fields to filter by:", options=categorical_fields) # multi-select
-    
+
     group_field = st.selectbox(
         "Select field to group by (optional):", 
         options=[i for i in categorical_fields if i not in select_fields]+["None"]
     ) # 选择分组字段，single-select
     if group_field == "None": # 如果选择了None，则设置为None
         group_field = None # 设置为None
-    
+
     bin_count = st.slider("Choose the number of bins", min_value=5, max_value=100, value=20) # 选择箱数，slider
-    
-    
+
+
     if select_fields and select_col:
         cols = st.columns(2) # 创建两列布局
         filters = {}
