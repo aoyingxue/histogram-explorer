@@ -3,7 +3,6 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-import math
 
 ## Edited on 2025/4/24 by Yuki
 
@@ -32,7 +31,16 @@ plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['axes.unicode_minus'] = False 
 
 # 上传文件模块
-uploaded_file = st.file_uploader("Upload a data file (CSV or xlsx)", type=["xlsx", "csv"]) 
+# 是否让用户自行选择默认数据还是自己上传数据
+option = st.radio(
+    "Choose data source:",
+    ['Use sample data (Teens Screen Time Mock Data)', 'Upload your own data file'],
+    index=0, # 默认选项
+) # 单选框
+if option == 'Use sample data (Teens Screen Time Mock Data)':
+    uploaded_file = pd.read_excel("data/teen_screen_time_mock_dataset.xlsx")
+else:
+    uploaded_file = st.file_uploader("Upload a data file (CSV or xlsx)", type=["xlsx", "csv"]) 
 
 if uploaded_file:
     # 读取数据模块
