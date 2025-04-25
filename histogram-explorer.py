@@ -30,26 +30,56 @@ st.markdown(
 plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['axes.unicode_minus'] = False 
 
+# 绘图模块
+def plot_histogram(data, ax, bin_count):
+    sns.histplot(data.dropna(), bins=bin_count, kde=True, ax=ax) 
+    counts, bins = np.histogram(data.dropna(), bins=bin_count) # 计算直方图的频数和区间
+    for count, bin_left, bin_right in zip(counts, bins[:-1], bins[1:]):
+        ax.text(
+            (bin_left + bin_right) / 2, # 计算区间中点
+            count,
+            str(count),
+            ha='center',
+            va='bottom',
+            fontsize=10,
+        ) # 在直方图上添加频数标签
+    ax.set_xticks(bins[::max(1, len(bins)//10)]) # 每10步算1个step，max用来确保步长至少为 1
+    ax.set_xticklabels([f"{b:.0f}" for b in bins[::max(1, len(bins)//10)]]) # 约合到整数的label
+    return ax
+
 # 上传文件模块
 # 是否让用户自行选择默认数据还是自己上传数据
 option = st.radio(
     "Choose data source:",
     ['Use sample data *(Teens Screen Time Mock Data by Back 2 Viz Basic)*', 'Upload your own data file'],
     index=0, # 默认选项
-) # 单选框
+)
+
+uploaded_file = None
+# File uploader only shown if user selects "Upload"
+if option == 'Upload your own data file':
+    uploaded_file = st.file_uploader("Upload a data file (CSV or xlsx)", type=["xlsx", "csv"]) 
+    
+@st.cache_data
+def get_data(source_option, uploaded_file):
+    if source_option == 'Use sample data *(Teens Screen Time Mock Data by Back 2 Viz Basic)*':
+        # 使用默认数据
+        df = pd.read_csv("data/teens_screen_time.csv") # 读取数据
+    else:
+        if uploaded_file is not None:
+            # 读取用户上传的数据
+            df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith(".csv") else pd.read_excel(uploaded_file)
+    return df
+
 df = pd.DataFrame()
 if option == 'Use sample data *(Teens Screen Time Mock Data by Back 2 Viz Basic)*':
-    uploaded_file = "data/teen_screen_time_mock_dataset.xlsx"
-    # 读取数据模块
-    df = pd.read_excel(uploaded_file)
-    st.success("Loaded sample dataset.")
-else:
-    uploaded_file = st.file_uploader("Upload a data file (CSV or xlsx)", type=["xlsx", "csv"]) 
-    if uploaded_file:
-        # 读取数据模块
-        df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('.csv') else pd.read_excel(uploaded_file) # 根据文件后缀读取CSV或Excel文件
-        st.success("✅ File uploaded successfully!") # 绿色成功提示框
-        st.write("Data Preview:", df.head()) # 显示数据预览
+    df = get_data(option, uploaded_file)
+    st.success("✅ Sample data loaded successfully!")
+elif uploaded_file is not None:
+    df = get_data(option, uploaded_file)
+    st.success("✅ File uploaded successfully!")
+    st.write("Data Preview:", df.head()) # 显示数据预览
+
 if df.shape[0]>0: 
     # 让用户选择画图所需的字段
     st.markdown("### Multi-Field Filter Panel")
@@ -67,7 +97,6 @@ if df.shape[0]>0:
         group_field = None # 设置为None
 
     bin_count = st.slider("Choose the number of bins", min_value=5, max_value=100, value=20) # 选择箱数，slider
-
 
     if select_fields and select_col:
         cols = st.columns(2) # 创建两列布局
@@ -89,45 +118,46 @@ if df.shape[0]>0:
         if filtered_df.empty:
             st.warning("No data available for the selected filters.")
             
-        elif group_field==None:
-            # 没有选择分组字段，即全选
-            st.markdown("#### Overall Distribution")
-            fig, ax = plt.subplots(figsize=(14, 8)) # 创建图表对象
-            sns.histplot(filtered_df[select_col], bins=bin_count, kde=True, ax=ax) 
-            st.pyplot(fig) # 显示图表 
-            
-        elif group_field:
-            st.markdown("#### Distribution Group By " + group_field)
-            group_values = filtered_df[group_field].drop_duplicates().sort_values(ascending=True).tolist() # 获取分组字段的选项
+        else:
+            if group_field == None:
+                # 没有选择分组字段，即全选
+                st.markdown("#### Overall Distribution")
+                fig, ax = plt.subplots(figsize=(14, 8)) # 创建图表对象
+                data = filtered_df[select_col]
+                plot_histogram(data, ax, bin_count)  # 使用提取出来的函数来绘图
+                st.pyplot(fig) # 显示图表 
+                
+            else:
+                # 如果选择了分组字段
+                st.markdown("#### Distribution Group By " + group_field)
+                group_values = filtered_df[group_field].drop_duplicates().sort_values(ascending=True).tolist() # 获取分组字段的选项
 
-            # 判断有多少行多少列（每行两个）
-            cols = 2
-            rows = (len(group_values)+1)//2 # 计算行数，确保够用
-                        
-            # 绘制直方图
-            fig, axs = plt.subplots(
-                nrows=rows,
-                ncols=cols,
-                figsize=(14, 6*rows), # 根据行数调整图表高度
-            )
-            
-            # axs.flatten() 是把二维坐标轴对象拉平成一维列表，好用循环遍历每个子图
-            axs = axs.flatten() # 展平多维数组为一维数组
-            
-            # kde：在直方图上额外叠加一条平滑的曲线（Kernel Density Estimation），也叫核密度估计曲线。常出现在用 Seaborn 或 Pandas 画直方图的时候
-            for i, value in enumerate(group_values):
-                ax = axs[i]
-                data = filtered_df[(filtered_df[group_field]==value)][select_col]
-                sns.histplot(data.dropna(), bins=bin_count, kde=True, ax=ax) 
-                ax.set_title(f"{value}",fontsize = 16)
+                # 判断有多少行多少列（每行两个）
+                cols = 2
+                rows = (len(group_values)+1)//2 # 计算行数，确保够用
+                            
+                fig, axs = plt.subplots(
+                    nrows=rows,
+                    ncols=cols,
+                    figsize=(14, 6*rows), # 根据行数调整图表高度
+                )
                 
-            for j in range(i+1, len(axs)):
-                axs[j].axis('off') # 隐藏多余的子图
+                # axs.flatten() 是把二维坐标轴对象拉平成一维列表，好用循环遍历每个子图
+                axs = axs.flatten() # 展平多维数组为一维数组
                 
-            plt.tight_layout(
-                pad=3.0,
-                h_pad=4.0,
-                w_pad=1.5,
-            ) # 调整子图之间的间距，防止第二排的图表标题和第一排的xlabel重合
-            
-            st.pyplot(fig) # 显示图表 
+                for i, value in enumerate(group_values):
+                    ax = axs[i]
+                    data = filtered_df[(filtered_df[group_field]==value)][select_col]
+                    ax = plot_histogram(data, ax, bin_count)  # 使用提取出来的函数来绘图
+                    ax.set_title(f"{value}", fontsize=16)
+                
+                # 隐藏多余的子图
+                for j in range(i+1, len(axs)):
+                    axs[j].axis('off') 
+                    
+                plt.tight_layout(
+                    pad=3.0,
+                    h_pad=4.0,
+                    w_pad=1.5,
+                ) # 调整子图之间的间距，防止第二排的图表标题和第一排的xlabel重合
+                st.pyplot(fig) # 显示图表
