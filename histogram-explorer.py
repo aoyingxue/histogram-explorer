@@ -34,11 +34,11 @@ plt.rcParams['axes.unicode_minus'] = False
 # 是否让用户自行选择默认数据还是自己上传数据
 option = st.radio(
     "Choose data source:",
-    ['Use sample data *(Teens Screen Time Mock Data)*', 'Upload your own data file'],
+    ['Use sample data *(Teens Screen Time Mock Data by Back 2 Viz Basic)*', 'Upload your own data file'],
     index=0, # 默认选项
 ) # 单选框
 df = pd.DataFrame()
-if option == 'Use sample data *(Teens Screen Time Mock Data)*':
+if option == 'Use sample data *(Teens Screen Time Mock Data by Back 2 Viz Basic)*':
     uploaded_file = "data/teen_screen_time_mock_dataset.xlsx"
     # 读取数据模块
     df = pd.read_excel(uploaded_file)
