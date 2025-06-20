@@ -64,7 +64,7 @@ if option == 'Upload your own data file':
 def get_data(source_option, uploaded_file):
     if source_option == 'Use sample data *(Teens Screen Time Mock Data by Back 2 Viz Basic)*':
         # 使用默认数据
-        df = pd.read_csv("data/teens_screen_time.csv") # 读取数据
+        df = pd.read_excel("https://github.com/aoyingxue/histogram-explorer/blob/main/data/teen_screen_time_mock_dataset.xlsx") # 读取数据
     else:
         if uploaded_file is not None:
             # 读取用户上传的数据
@@ -74,10 +74,10 @@ def get_data(source_option, uploaded_file):
 df = pd.DataFrame()
 if option == 'Use sample data *(Teens Screen Time Mock Data by Back 2 Viz Basic)*':
     df = get_data(option, uploaded_file)
-    st.success("✅ Sample data loaded successfully!")
+    st.success("Sample data loaded successfully!")
 elif uploaded_file is not None:
     df = get_data(option, uploaded_file)
-    st.success("✅ File uploaded successfully!")
+    st.success("File uploaded successfully!")
     st.write("Data Preview:", df.head()) # 显示数据预览
 
 if df.shape[0]>0: 
@@ -161,3 +161,5 @@ if df.shape[0]>0:
                     w_pad=1.5,
                 ) # 调整子图之间的间距，防止第二排的图表标题和第一排的xlabel重合
                 st.pyplot(fig) # 显示图表
+
+
