@@ -64,7 +64,7 @@ if option == 'Upload your own data file':
 def get_data(source_option, uploaded_file):
     if source_option == 'Use sample data *(Teens Screen Time Mock Data by Back 2 Viz Basic)*':
         # 使用默认数据
-        df = pd.read_csv("https://github.com/aoyingxue/histogram-explorer/blob/main/data/teen_screen_time_mock_dataset.csv") # 读取数据
+        df = pd.read_csv("https://raw.githubusercontent.com/aoyingxue/histogram-explorer/data/teen_screen_time_mock_dataset.csv") # 读取数据
     else:
         if uploaded_file is not None:
             # 读取用户上传的数据
